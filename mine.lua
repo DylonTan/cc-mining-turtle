@@ -75,7 +75,7 @@ end
 --[[
     TRAVEL FUNCTION
 ]]--
-
+ 
 function travel(destX, destY, destZ)
     -- Get and set origin point's x, y and z pos
     local originX, originY, originZ = gps.locate()
@@ -203,6 +203,7 @@ function getFacingDirection(previousX, previousZ, currentX, currentZ)
 
     end
 
+    -- Return facing direction
     return facingDirection
 
 end
@@ -241,6 +242,7 @@ function turnToDirection(facing, direction)
         end
     end
 
+    -- Make a U-Turn
     turtle.turnRight()
     turtle.turnRight()
 
@@ -270,6 +272,7 @@ function getPathDirections(currentX, currentZ, destX, destZ)
 
     end
 
+    -- Return path direction object
     return { x = directionX, z = directionZ }
 end
 
