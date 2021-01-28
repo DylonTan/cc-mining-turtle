@@ -1,9 +1,19 @@
-local height = 5
-local width = 5
-local breadth = 5
+--[[
+    WARNING: SPAGHETTI CODE AHEAD PROCEED AT YOUR OWN RISK.
+    I AM BY NO MEANS AN EXPERIENCED LUA PROGRAMMER I ONLY USED 1 HOUR TO LEARN IT BEFORE CODING
+]]--
 
+-- Initialize origin point object
+local origin = {
+    x = nil,
+    y = nil,
+    z = nil
+}
+
+-- Set constant value for turtle inventory size
 local INVENTORY_SIZE = 16
 
+-- Set array of valid fuel sources
 local VALID_FUEL_SOURCES = {
     "minecraft:coal_block",
     "minecraft:coal",
@@ -11,6 +21,7 @@ local VALID_FUEL_SOURCES = {
     "railcraft:fuel_coke"
 }
 
+-- Set array of acceptable items
 local ACCEPTABLE_ITEMS = {
     "minecraft:coal",
     "minecraft:iron_ore",
@@ -29,10 +40,14 @@ local ACCEPTABLE_ITEMS = {
 --[[
     START FUNCTION
 ]]--
-local nextUTurnDirection = "right"
 
 function start()
+    local width = nil
+    local height = nil
+    local breadth = nil
+
     if #arg == 6 then
+        -- Set variables to shell command args
         height = tonumber(arg[1])
         width = tonumber(arg[2])
         breadth = tonumber(arg[3])
@@ -41,6 +56,7 @@ function start()
         destY = tonumber(arg[5])
         destZ = tonumber(arg[6])
 
+        -- Travel to destination
         travel(destX, destY, destZ)
 
     else 
@@ -49,93 +65,86 @@ function start()
     
     end
 
-    if not checkFuelLevel() then
+    if not isFuelSufficient() then
         return
     end
+
+    mine(width, height, breadth)
 end
 
 --[[
     TRAVEL FUNCTION
 ]]--
+
 function travel(destX, destY, destZ)
-    -- Get current x, y and z pos
-    local currentX, currentY, currentZ = gps.locate()
-    
+    -- Get and set origin point's x, y and z pos
+    local originX, originY, originZ = gps.locate()
+    origin.x = originX
+    origin.y = originY
+    origin.z = originZ
+
     moveForwardAndDig()
 
-    -- Get new x, y and z pos
-    local newX, newY, newZ = gps.locate()
+    -- Get new reference point's x, y and z pos
+    local currentX, currentY, currentZ = gps.locate()
 
-    -- Determine which nextUTurnDirection the turtle is facing by sending previous pos and new pos
-    local facing = getFacingDirection(currentX, currentZ, newX, newZ)
+    -- Determine which direction the turtle is facing by sending previous pos and new pos
+    local facing = getFacingDirection(originX, originZ, currentX, currentZ)
 
     -- Absolute distance between current x pos and destination x pos
-    local distanceX = math.abs(newX - destX)
+    local distanceX = math.abs(currentX - destX)
+
+    -- Absolute distance between current y pos and destination y pos
+    local distanceZ = math.abs(currentY - destY)
 
     -- Absolute distance between current z pos and destination z pos
-    local distanceZ = math.abs(newZ - destZ)
+    local distanceZ = math.abs(currentZ - destZ)
 
-    -- Get correct route (2 directions)
-    local route = getRoute(newX, newZ, destX, destZ)
+    -- Get correct path directions (2 directions)
+    local pathDirections = getPathDirections(currentX, currentZ, destX, destZ)
     
-    -- Check if destination has been reached
-    while not newX == destX and not newZ == destZ do
+    -- Turn to correct path direction on the x axis 
+    turnToDirection(facing, pathDirections.x)
 
-        -- Check if turtle is facing north
-        if facing == "north" then
+    facing = pathDirections.x
 
-            -- Check if turtle is facing south
-            if route[1] == "south" then
-
-                -- Make a U-Turn
-                turtle.turnRight()
-                turtle.turnRight()
-
-            end
-
-            -- Traverse distance required on the z axis
-            for newZ, distanceZ do
-                moveForwardAndDig()
-
-                -- Update current z pos
-                newZ++
-
-            end
-        end
-        
-        -- Check if turtle is facing west
-        if facing == "west" then
-
-            -- Check if turtle is facing east
-            if route[0] == "east" then
-
-                -- Make a U-Turn
-                turtle.turnRight()
-                turtle.turnRight()
-
-            end
-            
-            -- Traverse distance required on the x axis
-            for newX, distanceX do
-                moveForwardAndDig()
-
-                -- Update current z pos
-                newX++
-
-            end
-        end
+    -- Traverse distance required on the x axis
+    for x = 1, distanceX do
+        moveForwardAndDig()
     end
 
-    -- Traverse and dig distance required on the y axis 
-    for y = currentY, destY do
-        moveDownAndDig()
+    -- Turn to correct path direction on the z axis 
+    turnToDirection(facing, pathDirections.z)
+
+    facing = pathDirections.currentZ
+
+    -- Traverse distance required on the z axis
+    for z = 1, distanceZ do
+        moveForwardAndDig()
     end
+
+    -- Traverse distance required on the y axis
+
+    -- Check if destination is below turtle
+    if currentY > destY then
+        for y = 1, distanceY do
+            moveDownAndDig()
+        end
+    else
+        for y = 1, distanceY do
+            moveUpAndDig()
+        end
+    end
+ 
 end
 
 --[[
     MINE FUNCTION
 ]]--
-function mine()
+
+local nextUTurnDirection = "right"
+
+function mine(width, height, breadth)
 
     -- Traverse and dig height required
     for y = 1, height do
@@ -176,21 +185,21 @@ end
 function getFacingDirection(previousX, previousZ, currentX, currentZ)
     local facingDirection = ""
     
-    -- Turtle is facing north if current z pos is less than previous z pos
+    -- Turtle is facing N if current z pos is less than previous z pos
     if currentZ < previousZ then
-        facingDirection = "north"
+        facingDirection = "N"
 
-    -- Turtle is facing west if current x pos is less than previous x pos
+    -- Turtle is facing W if current x pos is less than previous x pos
     elseif currentX < previousX then
-        facingDirection = "west"
+        facingDirection = "W"
 
-    -- Turtle is facing east if current x pos is greater than previous x pos
+    -- Turtle is facing E if current x pos is greater than previous x pos
     elseif currentX > previousX then 
-        facingDirection = "east"
+        facingDirection = "E"
 
-    -- Turtle is facing south if current z pos is greater than current z pos
+    -- Turtle is facing S if current z pos is greater than current z pos
     else 
-        facingDirection = "south"
+        facingDirection = "S"
 
     end
 
@@ -198,51 +207,90 @@ function getFacingDirection(previousX, previousZ, currentX, currentZ)
 
 end
 
-function getRoute(currentX, currentZ, destX, destZ)
+function turnToDirection(facing, direction)
+    -- Permutations for a left turn
+    local permLeft = {
+        'NW', 'WS', 'SE', 'EN'
+    }
+
+    -- Permutations for a right turn
+    local permRight = {
+        "NE", "ES", "SW", "WN"
+    }
+    
+    -- Get current permutation
+    local currentPerm = facing..direction
+
+    -- Check every permutation for a left turn
+    for l = 1, #permLeft do
+
+        -- Check if current permutation is included
+        if currentPerm == permLeft[l] then
+            turtle.turnLeft()
+            return
+        end
+    end
+
+    -- Check every permutation for a right turn
+    for r = 1, #permRight do
+
+        -- Check if current permutation is included
+        if currentPerm == permRight[r] then
+            turtle.turnRight()
+            return
+        end
+    end
+
+    turtle.turnRight()
+    turtle.turnRight()
+
+end
+
+function getPathDirections(currentX, currentZ, destX, destZ)
     local directionX = ""
     local directionZ = ""
 
     -- Turtle should go east if current x pos is less than destination x pos
     if currentX < destX then
-        directionX = "east"
+        directionX = "E"
 
     -- Turtle should go west if current x pos is greater than destination x pos
     else 
-        directionX = "west"
+        directionX = "W"
 
     end
 
     -- Turtle should go south if current z pos is less than destination z pos
     if currentZ < destZ then
-        directionZ = "south"
+        directionZ = "S"
 
     -- Turtle should go north if current z pos is greater than destination z pos
     else
-        directionZ = "north"
+        directionZ = "N"
 
     end
 
-    return { directionX, directionY }
+    return { x = directionX, z = directionZ }
 end
 
 function refuel(slotNumber)
-    print("[SLAVE]: Refueling... \n")
+    print("[TURTLE]: Refueling... \n")
     -- Select item at slot number
     turtle.select(slotNumber)
 
     -- Use selected item to refuel turtle
     turtle.refuel()
-    print("[SLAVE]: Refueled, returning to forced labour.")
+    print("[TURTLE]: Refueled, returning to forced labour.")
 end
 
-function checkFuelLevel()
+function isFuelSuxfficient()
     -- Calculate required fuel level ( 1 fuel level/block )
     local requiredFuelLevel = math.ceil(height * width * breadth)
 
     -- Get current fuel level
     local currentFuelLevel = turtle.getFuelLevel()
 
-    print("[SLAVE]: Current fuel level is "..currentFuelLevel.."\nRequired fuel level is "..requiredFuelLevel)
+    print("[TURTLE]: Current fuel level is "..currentFuelLevel.."\nRequired fuel level is "..requiredFuelLevel)
 
     -- Check if current fuel level is greater than required fuel level
     if currentFuelLevel > requiredFuelLevel then
@@ -250,7 +298,7 @@ function checkFuelLevel()
         return true
 
     else
-        print("[SLAVE]: Attempting refuel...")
+        print("[TURTLE]: Attempting refuel...")
 
         -- Check every item in inventory 
         for i = 1, INVENTORY_SIZE do
@@ -265,7 +313,7 @@ function checkFuelLevel()
 
                     -- Check if current item is valid fuel source
                     if currentItem.name == VALID_FUEL_SOURCES[j] then
-                        print("[SLAVE]: Valid fuel source found.")
+                        print("[TURTLE]: Valid fuel source found.")
 
                         -- Refuel turtle with current item
                         refuel(i)
@@ -280,46 +328,46 @@ function checkFuelLevel()
 
     end 
 
-    print("[SLAVE]: No valid fuel source found.")
+    print("[TURTLE]: No valid fuel source found.")
 
     return true
 end
 
 function moveUpAndDig()
-    print("[SLAVE]: Moving up and digging...")
+    print("[TURTLE]: Moving up and digging...")
 
-    -- Dig once, keep digging if turtle can not go up
+    -- Dig once, keep digging if blocked
     while turtle.up() == false do
         turtle.digUp()
     end
 
-    print("[SLAVE]: Moved up and dug.")
+    print("[TURTLE]: Moved up and dug.")
 end
  
 function moveForwardAndDig()
-    print("[SLAVE]: Moving forward and digging...")
+    print("[TURTLE]: Moving forward and digging...")
 
-    -- Dig once, keep digging if turtle can not go forward
+    -- Dig once, keep digging if blocked
     while turtle.forward() == false do
         turtle.dig()
     end
 
-    print("[SLAVE]: Moved forward and dug.")
+    print("[TURTLE]: Moved forward and dug.")
 end
  
 function moveDownAndDig()
-    print("[SLAVE]: Moving down and digging...")
+    print("[TURTLE]: Moving down and digging...")
 
-    -- Dig once, keep digging if turtle can not go down
+    -- Dig once, keep digging if blocked 
     while turtle.down() == false do
         turtle.digDown()
     end
 
-    print("[SLAVE]: Moved down and dug.")
+    print("[TURTLE]: Moved down and dug.")
 end
 
 function corner(z, breadth)
-    print("[SLAVE]: Making a corner...")
+    print("[TURTLE]: Making a corner...")
 
     -- Make U-Turn, change next U-Turn direction to left if current is right
     if nextUTurnDirection == "right" then
@@ -332,11 +380,11 @@ function corner(z, breadth)
         nextUTurnDirection = "right"    
     end
 
-    print("[SLAVE]: Corner completed.")
+    print("[TURTLE]: Corner completed.")
 end
 
 function uTurn(direction)
-    print("[SLAVE]: Making a U-Turn...")
+    print("[TURTLE]: Making a U-Turn...")
 
     -- Make U-Turn to the right
     if direction == "right" then
@@ -351,11 +399,11 @@ function uTurn(direction)
         turtle.turnLeft()
     end
 
-    print("[SLAVE]: U-Turn completed.")
+    print("[TURTLE]: U-Turn completed.")
 end
 
 function filterInventory()
-    print("[SLAVE]: Filtering inventory...")
+    print("[TURTLE]: Filtering inventory...")
 
     -- Check every item in inventory
     for i = 1, INVENTORY_SIZE do
@@ -371,7 +419,7 @@ function filterInventory()
 
                 -- Check if current item is an acceptable item
                 if currentItem.name == ACCEPTABLE_ITEMS[n] then
-                    print("[SLAVE] Found good stuff: "..currentItem.name..". Keeping..")
+                    print("[TURTLE] Found good stuff: "..currentItem.name..". Keeping..")
                     isGarbage = false
                     break
                 end
@@ -379,7 +427,7 @@ function filterInventory()
 
             -- Throw current item away if it is not acceptable
             if isGarbage then
-                print("[SLAVE] Found shit: "..currentItem.name..". Dumping..")
+                print("[TURTLE] Found shit: "..currentItem.name..". Dumping..")
                 turtle.select(i)
                 turtle.dropUp()
 
@@ -387,13 +435,13 @@ function filterInventory()
         end
     end
 
-    print("[SLAVE]: Filtered inventory.")
+    print("[TURTLE]: Filtered inventory.")
 
     return
 end
 
 function groupInventory()
-    print("[SLAVE] Grouping inventory...")
+    print("[TURTLE] Grouping inventory...")
 
     -- Check every item in inventory
     for i = 1, INVENTORY_SIZE do
@@ -423,7 +471,7 @@ function groupInventory()
         end
     end
 
-    print("[SLAVE] Grouped inventory, returning to forced labour.")
+    print("[TURTLE] Grouped inventory, returning to forced labour.")
 
     return
 end
