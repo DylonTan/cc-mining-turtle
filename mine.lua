@@ -3,12 +3,18 @@
     I AM BY NO MEANS AN EXPERIENCED LUA PROGRAMMER I ONLY USED 1 HOUR TO LEARN IT BEFORE CODING
 ]]--
 
--- Initialize origin point object
-local origin = {
-    x = nil,
-    y = nil,
-    z = nil
-}
+-- Initialize origin point x, y and z pos
+local originX, originY, originZ = gps.locate()
+
+-- Initialize width, height and length
+local width = nil
+local height = nil
+local breadth = nil
+
+-- Initialize distance to destination
+local distanceX = nil
+local distanceY = nil
+local distanceZ = nil
 
 -- Set constant value for turtle inventory size
 local INVENTORY_SIZE = 16
@@ -42,11 +48,8 @@ local ACCEPTABLE_ITEMS = {
 ]]--
 
 function start()
-    local width = nil
-    local height = nil
-    local breadth = nil
 
-    if #arg == 6 then
+    if #arg == 7 then
         -- Set variables to shell command args
         height = tonumber(arg[1])
         width = tonumber(arg[2])
@@ -55,12 +58,19 @@ function start()
         destX = tonumber(arg[4])
         destY = tonumber(arg[5])
         destZ = tonumber(arg[6])
+        destDirection = tostring(arg[7])
 
-        -- Travel to destination
-        travel(destX, destY, destZ)
+        -- Set absolute distance between current x pos and destination x pos
+        distanceX = math.abs(originX - destX)
+
+        -- Set absolute distance between current y pos and destination y pos
+        distanceY = math.abs(originY - destY)
+
+        -- Set absolute distance between current z pos and destination z pos
+        distanceZ = math.abs(originZ - destZ)
 
     else 
-        print("Please enter the width and height (e.g. mine 5 5 5 1 1 1)")
+        print("Please enter the width and height (e.g. mine 5 5 5 1 1 1 south)")
         return 
     
     end
@@ -69,19 +79,21 @@ function start()
         return
     end
 
+    -- Travel to destination
+    travel(destX, destY, destZ, destDirection)
+
+    -- Mine designated area
     mine(width, height, breadth)
+
+    -- Return to origin
+    travel(originX, originY, originZ, 'N')
 end
 
 --[[
     TRAVEL FUNCTION
 ]]--
  
-function travel(destX, destY, destZ)
-    -- Get and set origin point's x, y and z pos
-    local originX, originY, originZ = gps.locate()
-    origin.x = originX
-    origin.y = originY
-    origin.z = originZ
+function travel(destX, destY, destZ, destDirection)
 
     moveForwardAndDig()
 
@@ -90,15 +102,6 @@ function travel(destX, destY, destZ)
 
     -- Determine which direction the turtle is facing by sending previous pos and new pos
     local facing = getFacingDirection(originX, originZ, currentX, currentZ)
-
-    -- Absolute distance between current x pos and destination x pos
-    local distanceX = math.abs(currentX - destX)
-
-    -- Absolute distance between current y pos and destination y pos
-    local distanceZ = math.abs(currentY - destY)
-
-    -- Absolute distance between current z pos and destination z pos
-    local distanceZ = math.abs(currentZ - destZ)
 
     -- Get correct path directions (2 directions)
     local pathDirections = getPathDirections(currentX, currentZ, destX, destZ)
@@ -116,7 +119,7 @@ function travel(destX, destY, destZ)
     -- Turn to correct path direction on the z axis 
     turnToDirection(facing, pathDirections.z)
 
-    facing = pathDirections.currentZ
+    facing = pathDirections.z
 
     -- Traverse distance required on the z axis
     for z = 1, distanceZ do
@@ -135,6 +138,9 @@ function travel(destX, destY, destZ)
             moveUpAndDig()
         end
     end
+
+    -- Turn to direction master was facing
+    turnToDirection(facing, destDirection)
  
 end
 
@@ -286,9 +292,9 @@ function refuel(slotNumber)
     print("[TURTLE]: Refueled, returning to forced labour.")
 end
 
-function isFuelSuxfficient()
+function isFuelSufficient()
     -- Calculate required fuel level ( 1 fuel level/block )
-    local requiredFuelLevel = math.ceil(height * width * breadth)
+    local requiredFuelLevel = math.ceil(height * width * breadth) + 2 * (distanceX + distanceY + distanceZ)
 
     -- Get current fuel level
     local currentFuelLevel = turtle.getFuelLevel()
