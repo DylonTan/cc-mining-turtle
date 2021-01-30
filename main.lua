@@ -8,48 +8,21 @@
     GLOBAL VARIABLES
 ]]--
 
-local movement = require("movement.lua")
-local action = require("action.lua")
+os.loadAPI('movement')
+os.loadAPI('action')
 
 -- Initialize origin point x, y and z pos
-originX, originY, originZ = gps.locate()
+local originX, originY, originZ = gps.locate()
 
 -- Initialize width, height and length
-width = nil
-height = nil
-breadth = nil
+local width = nil
+local height = nil
+local breadth = nil
 
 -- Initialize distance to destination
-distanceX = nil
-distanceY = nil
-distanceZ = nil
-
--- Set constant value for turtle inventory size
-INVENTORY_SIZE = 16
-
--- Set array of valid fuel sources
-VALID_FUEL_SOURCES = {
-    "minecraft:coal_block",
-    "minecraft:coal",
-    "minecraft:lava_bucket",
-    "railcraft:fuel_coke"
-}
-
--- Set array of acceptable items
-ACCEPTABLE_ITEMS = {
-    "minecraft:coal",
-    "minecraft:iron_ore",
-    "minecraft:gold_ore",
-    "minecraft:redstone",
-    "minecraft:diamond",
-    "minecraft:emerald",
-    "minecraft:dye",
-    "thermalfoundation:ore",
-    "appliedenergistics2:material",
-    "tconstruct:ore",
-    "draconiumevolution:draconium_dust",
-    "bigreactors:oreyellorite"
-}
+local distanceX = nil
+local distanceY = nil
+local distanceZ = nil
 
 -- MAIN FUNCTION
 function main() 
@@ -84,13 +57,13 @@ function start(args)
 
     if #args == 8 then
         -- Set variables to shell command args
-        height = tonumber(arg[2])
-        width = tonumber(arg[3])
-        breadth = tonumber(arg[4])
+        height = tonumber(args[2])
+        width = tonumber(args[3])
+        breadth = tonumber(args[4])
 
-        destX = tonumber(arg[5])
-        destY = tonumber(arg[6])
-        destZ = tonumber(arg[7])
+        destX = tonumber(args[5])
+        destY = tonumber(args[6])
+        destZ = tonumber(args[7])
         destFacing = tostring(arg[8])
 
         -- Set absolute distance between current x pos and destination x pos
@@ -108,18 +81,18 @@ function start(args)
     
     end
 
-    if not isFuelSufficient() then
+    if not action.isFuelSufficient(width, height, breadth, distanceX, distanceY, distanceZ) then
         return
     end
 
     -- Travel to destination
-    movement.travel(destX, destY, destZ, destFacing)
+    movement.travel(originX, originZ, destX, destY, destZ, destFacing)
 
     -- Mine designated area
     action.mine(width, height, breadth)
 
     -- Return to origin
-    movement.travel(originX, originY, originZ, 'N')
+    movement.travel(originX, originY, originZ, destX, destZ, 'N')
 end
 
 function split (str, seperator)

@@ -1,12 +1,36 @@
-local M = {}
-
 --[[
     MINE FUNCTION
 ]]--
 
-local nextUTurnDirection = "right"
+os.loadAPI("movement")
 
-function M.mine(width, height, breadth)
+local INVENTORY_SIZE = 16
+
+-- Set array of valid fuel sources
+local VALID_FUEL_SOURCES = {
+    "minecraft:coal_block",
+    "minecraft:coal",
+    "minecraft:lava_bucket",
+    "railcraft:fuel_coke"
+}
+
+-- Set array of acceptable items
+local ACCEPTABLE_ITEMS = {
+    "minecraft:coal",
+    "minecraft:iron_ore",
+    "minecraft:gold_ore",
+    "minecraft:redstone",
+    "minecraft:diamond",
+    "minecraft:emerald",
+    "minecraft:dye",
+    "thermalfoundation:ore",
+    "appliedenergistics2:material",
+    "tconstruct:ore",
+    "draconiumevolution:draconium_dust",
+    "bigreactors:oreyellorite"
+}
+
+function mine(width, height, breadth)
 
     -- Traverse and dig height required
     for y = 1, height do
@@ -16,12 +40,12 @@ function M.mine(width, height, breadth)
 
             -- Traverse and dig width required
             for x = 1, width - 1 do
-                moveForwardAndDig()
+                movement.moveForwardAndDig()
             end
 
             -- Corner if turtle has not reached designated breadth
             if z ~= breadth then
-                corner(z, breadth)
+                movement.corner(z, breadth)
             end
 
             -- Filter unwanted items in inventory
@@ -32,7 +56,7 @@ function M.mine(width, height, breadth)
         end
 
         -- Dig down to next y level
-        moveDownAndDig()
+        movement.moveDownAndDig()
 
         -- Make a U-Turn
         turtle.turnRight()
@@ -55,9 +79,9 @@ function refuel(slotNumber)
     print("[TURTLE]: Refueled, returning to forced labour.")
 end
 
-function isFuelSufficient()
+function isFuelSufficient(width, height, breadth, distanceX, distanceY, distanceZ)
     -- Calculate required fuel level ( 1 fuel level/block )
-    local requiredFuelLevel = math.ceil(height * width * breadth) + 2 * (distanceX + distanceY + distanceZ)
+    local requiredFuelLevel = math.ceil(width * height * breadth) + 2 * (distanceX + distanceY + distanceZ)
 
     -- Get current fuel level
     local currentFuelLevel = turtle.getFuelLevel()
@@ -179,4 +203,4 @@ function groupInventory()
     return
 end
 
-return M
+return { mine = mine, isFuelSufficient = isFuelSufficient }

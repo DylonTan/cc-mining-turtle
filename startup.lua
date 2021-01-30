@@ -4,8 +4,8 @@ if not fs.exist("./main") then
 end
 
 -- Copy mine script to turtle if non found
-if not fs.exist("./mine") then
-    fs.copy("disk/mine", "mine")
+if not fs.exist("./action") then
+    fs.copy("disk/action", "action")
 end
 
 shell.run("main")

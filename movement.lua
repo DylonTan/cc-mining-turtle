@@ -1,10 +1,10 @@
-local M = {}
-
 --[[
     TRAVEL FUNCTION
 ]]--
+
+local nextUTurnDirection = "right"
  
-function M.travel(destX, destY, destZ, destDirection)
+function travel(originX, originZ, destX, destY, destZ, destDirection, distanceX, distanceY, distanceZ)
 
     moveForwardAndDig()
 
@@ -153,7 +153,7 @@ function getPathDirections(currentX, currentZ, destX, destZ)
     return { x = directionX, z = directionZ }
 end
 
-function M.moveUpAndDig()
+function moveUpAndDig()
     print("[TURTLE]: Moving up and digging...")
 
     -- Dig once, keep digging if blocked
@@ -164,7 +164,7 @@ function M.moveUpAndDig()
     print("[TURTLE]: Moved up and dug.")
 end
  
-function M.moveForwardAndDig()
+function moveForwardAndDig()
     print("[TURTLE]: Moving forward and digging...")
 
     -- Dig once, keep digging if blocked
@@ -175,7 +175,7 @@ function M.moveForwardAndDig()
     print("[TURTLE]: Moved forward and dug.")
 end
  
-function M.moveDownAndDig()
+function moveDownAndDig()
     print("[TURTLE]: Moving down and digging...")
 
     -- Dig once, keep digging if blocked 
@@ -186,7 +186,7 @@ function M.moveDownAndDig()
     print("[TURTLE]: Moved down and dug.")
 end
 
-function M.corner(z, breadth)
+function corner(z, breadth)
     print("[TURTLE]: Making a corner...")
 
     -- Make U-Turn, change next U-Turn direction to left if current is right
@@ -203,7 +203,7 @@ function M.corner(z, breadth)
     print("[TURTLE]: Corner completed.")
 end
 
-function M.uTurn(direction)
+function uTurn(direction)
     print("[TURTLE]: Making a U-Turn...")
 
     -- Make U-Turn to the right
@@ -222,4 +222,4 @@ function M.uTurn(direction)
     print("[TURTLE]: U-Turn completed.")
 end
 
-return M
+return { travel = travel, moveUpAndDig = moveUpAndDig, moveForwardAndDig = moveForwardAndDig, moveDownAndDig = moveDownAndDig, corner = corner, uTurn = uTurn }
