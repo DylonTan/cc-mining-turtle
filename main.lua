@@ -59,18 +59,20 @@ function main()
     -- Listen to rednet signal
     while true do
         -- Listen to senederID, message and protocol from rednet signal
-        local senderID, instruction, protocol = rednet.receive()
-        print(instruction, protocol)
+        local senderID, message, protocol = rednet.receive()
 
-        -- Run instruction
-        shell.run(instruction)
-
+        local args = split(tostring(message), " ")
+        local instruction = args[1]
+       
         -- End listening loop if exit instruction is received
         if instruction == "exit" then
             break
 
         end
 
+        if instruction == 'mine' then
+            start(args)
+        end
     end
 
     -- Close wireless modem
@@ -78,18 +80,18 @@ function main()
 
 end
 
-function start()
+function start(args)
 
-    if #arg == 7 then
+    if #args == 8 then
         -- Set variables to shell command args
-        height = tonumber(arg[1])
-        width = tonumber(arg[2])
-        breadth = tonumber(arg[3])
+        height = tonumber(arg[2])
+        width = tonumber(arg[3])
+        breadth = tonumber(arg[4])
 
-        destX = tonumber(arg[4])
-        destY = tonumber(arg[5])
-        destZ = tonumber(arg[6])
-        destDirection = tostring(arg[7])
+        destX = tonumber(arg[5])
+        destY = tonumber(arg[6])
+        destZ = tonumber(arg[7])
+        destFacing = tostring(arg[8])
 
         -- Set absolute distance between current x pos and destination x pos
         distanceX = math.abs(originX - destX)
@@ -111,13 +113,27 @@ function start()
     end
 
     -- Travel to destination
-    movement.travel(destX, destY, destZ, destDirection)
+    movement.travel(destX, destY, destZ, destFacing)
 
     -- Mine designated area
     action.mine(width, height, breadth)
 
     -- Return to origin
     movement.travel(originX, originY, originZ, 'N')
+end
+
+function split (str, seperator)
+    if seperator == nil then
+        seperator = "%s"
+    end
+
+    local arr = {}
+
+    for str in string.gmatch(str, "[^%s]+") do
+            table.insert(arr, str)
+    end
+    
+    return arr
 end
 
 main()

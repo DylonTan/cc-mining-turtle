@@ -6,7 +6,7 @@ local M = {}
 
 local nextUTurnDirection = "right"
 
-function mine(width, height, breadth)
+function M.mine(width, height, breadth)
 
     -- Traverse and dig height required
     for y = 1, height do
@@ -103,75 +103,6 @@ function isFuelSufficient()
     print("[TURTLE]: No valid fuel source found.")
 
     return true
-end
-
-function moveUpAndDig()
-    print("[TURTLE]: Moving up and digging...")
-
-    -- Dig once, keep digging if blocked
-    while turtle.up() == false do
-        turtle.digUp()
-    end
-
-    print("[TURTLE]: Moved up and dug.")
-end
- 
-function moveForwardAndDig()
-    print("[TURTLE]: Moving forward and digging...")
-
-    -- Dig once, keep digging if blocked
-    while turtle.forward() == false do
-        turtle.dig()
-    end
-
-    print("[TURTLE]: Moved forward and dug.")
-end
- 
-function moveDownAndDig()
-    print("[TURTLE]: Moving down and digging...")
-
-    -- Dig once, keep digging if blocked 
-    while turtle.down() == false do
-        turtle.digDown()
-    end
-
-    print("[TURTLE]: Moved down and dug.")
-end
-
-function corner(z, breadth)
-    print("[TURTLE]: Making a corner...")
-
-    -- Make U-Turn, change next U-Turn direction to left if current is right
-    if nextUTurnDirection == "right" then
-        uTurn(nextUTurnDirection)
-        nextUTurnDirection = "left"
-
-    -- Make U-Turn, change next U-Turn direction to left if current is right
-    else
-        uTurn(nextUTurnDirection)
-        nextUTurnDirection = "right"    
-    end
-
-    print("[TURTLE]: Corner completed.")
-end
-
-function uTurn(direction)
-    print("[TURTLE]: Making a U-Turn...")
-
-    -- Make U-Turn to the right
-    if direction == "right" then
-        turtle.turnRight()
-        moveForwardAndDig()
-        turtle.turnRight()
-    
-    -- Make U-Turn to the left
-    else
-        turtle.turnLeft()
-        moveForwardAndDig()
-        turtle.turnLeft()
-    end
-
-    print("[TURTLE]: U-Turn completed.")
 end
 
 function filterInventory()
