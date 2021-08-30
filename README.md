@@ -1,2 +1,2 @@
 ﻿# ComputerCraft Mining Turtle
-Scripts for an army of ComputerCraft mining turtles
+A collection of scripts to control an army of ComputerCraft mining turtles
